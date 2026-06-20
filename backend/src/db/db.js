@@ -1,23 +1,29 @@
 import mongoose from "mongoose";
 
-
-async function  connectDB(req,res){
+let isConnected=false
+const connectDB=async()=>{
+            if(isConnected) return;
 
             try{
 
-                        await mongoose.connect("");
+                        await mongoose.connect(process.env.MONGO,{
+                        serverSelectionTimeoutMS:10000,//agar 10 sec my connection fail kardalte 
+                        socketTimeoutMS:45000,//connect hone k bad kohi b operation bhut time ny chaliya toh socket close karna,
+                        maxPoolSize:1,//MongoDB kitne connections ek saath maintain kare.
+                           minPoolSize:0,     
+                        });
+                        isConnected=true;
+                        console.log("Connected to MongoDB")
 
-                        console.log("Database has been connected successfully")
+            }catch(err){
 
-
-
-            }catch(error){
-
-                        console.log("Database error",error)
+                        console.log("MongoDB connection error",err.message)
+                        isConnected=false;
+                        throw err
 
             }
+};
 
 
-}
 
 export default connectDB
