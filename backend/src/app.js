@@ -1,5 +1,5 @@
 import  express from "express"
-import mongoose from "mongoose"
+import mongoose, { connect } from "mongoose"
 import dotenv, { configDotenv } from "dotenv"
 import cors from "cors"
 import userRoutes from "./routes/user.route.js"
@@ -55,6 +55,40 @@ app.get("/api/debug",(req,res)=>{
                         hasMongoEnv:!!process.env.MONGO,
                         hasJwtSecret:!!process.env.JWT_SECRET,
                         timestamp:new Date(),
+            })
+})
+
+app.get("/api/debug-db",async(req,res)=>{
+            try{
+                        await connectDB();
+                        res.json({
+                                    message:"Database connection successfully",
+                                    connected:true,
+                                    timestamp:new Date()
+                        })
+            }catch(error){
+                        res.json({
+                                    message:"Database connection Failed",
+                                    connected:false,
+                                    error:error.message,
+                                    timestamp:new Date()
+                        })
+
+            }
+});
+
+app.use("/api/user",connectMiddleware,userRoutes)
+app.use("/api/auth",connectMiddleware,authRoutes)
+app.use("/api/post",connectMiddleware,postRoutes)
+app.use("/api/comment",connectMiddleware,commentRoutes)
+
+app.use((err,req,res,next)=>{
+            const statusCode=err.statusCode||500;
+            const message=err.message||"Internal Server Error";
+            return res.status(statusCode).json({
+                        success:false,
+                        message,
+                        statusCode
             })
 })
 
